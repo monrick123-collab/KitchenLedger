@@ -25,7 +25,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from '@/types';
-import type { Receta, RegistroProduccion } from '@/types';
+import type { RegistroProduccion } from '@/types';
 import { useDatabase } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 

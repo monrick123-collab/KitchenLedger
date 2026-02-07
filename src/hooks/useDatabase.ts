@@ -363,7 +363,7 @@ export function useDatabase() {
   const actualizacionMasiva = async (actualizaciones: { id: string; costoUnitario: number }[]) => {
     try {
       for (const act of actualizaciones) {
-        await supabase.from('insumos').update({ costo_unitario: act.costoUnitario }).eq('id', act.id);
+        await supabase.from('insumos').update({ costo_unitario: act.costoUnitario } as any).eq('id', act.id);
       }
       await cargarDatos();
     } catch (e) {
@@ -384,6 +384,98 @@ export function useDatabase() {
       console.error(e);
     }
   };
+
+  // ============================================
+  // FASE 4: PRODUCCIÓN Y REPORTES
+  // ============================================
+
+  async function registrarProduccion(produccion: {
+    recetaId: string;
+    cantidad: number;
+    costoUnitarioSnapshot: number;
+    costoTotal: number;
+  }) {
+    try {
+      const { data, error } = await supabase
+        .from('historial_produccion')
+        .insert({
+          receta_id: produccion.recetaId,
+          cantidad_producida: produccion.cantidad,
+          costo_unitario_snapshot: produccion.costoUnitarioSnapshot,
+          costo_total: produccion.costoTotal,
+          fecha: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error("Error registrando producción:", e);
+      throw e;
+    }
+  }
+
+  async function registrarMovimiento(movimiento: {
+    tipo: 'COMPRA' | 'MERMA' | 'AJUSTE';
+    ingredienteId: string;
+    cantidad: number;
+    unidadMedida: string;
+    costoUnitario: number;
+    costoTotal: number;
+    motivo?: string;
+  }) {
+    try {
+      const { data, error } = await supabase
+        .from('movimientos_inventario')
+        .insert({
+          tipo: movimiento.tipo,
+          ingrediente_id: movimiento.ingredienteId,
+          cantidad: movimiento.cantidad,
+          unidad_medida: movimiento.unidadMedida,
+          costo_unitario_snapshot: movimiento.costoUnitario,
+          costo_total: movimiento.costoTotal,
+          motivo: movimiento.motivo,
+          fecha: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error("Error registrando movimiento:", e);
+      throw e;
+    }
+  }
+
+  async function fetchHistorialProduccion() {
+    try {
+      const { data, error } = await supabase
+        .from('historial_produccion')
+        .select(`
+          *,
+          recetas (nombre)
+        `)
+        .order('fecha', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      return (data || []).map((item: any) => ({
+        id: item.id,
+        fecha: item.fecha,
+        recetaId: item.receta_id,
+        nombreReceta: item.recetas ? (Array.isArray(item.recetas) ? item.recetas[0].nombre : item.recetas.nombre) : 'Desconocida',
+        cantidadProducida: Number(item.cantidad_producida),
+        costoUnitarioSnapshot: Number(item.costo_unitario_snapshot),
+        costoTotal: Number(item.costo_total)
+      }));
+    } catch (e) {
+      console.error("Error fetching historial:", e);
+      return [];
+    }
+  }
 
   return {
     ingredientes,

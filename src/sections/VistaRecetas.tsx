@@ -23,7 +23,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,10 +44,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Receta, Ingrediente, PasoReceta } from '@/types';
+import type { Receta, Ingrediente } from '@/types';
 import {
   CATEGORIAS_RECETAS,
-  UNIDADES,
   formatCurrency,
   formatPercent,
   getIndicadorRentabilidad
@@ -305,7 +303,6 @@ interface DetalleRecetaProps {
 
 function DetalleReceta({ receta, ingredientes, onCerrar, onEditar, onIniciarCocina }: DetalleRecetaProps) {
   const costoPorPorcion = receta.costoTotal / receta.porciones;
-  const gananciaPorPorcion = (receta.precioVenta / receta.porciones) - costoPorPorcion;
   const tienePasos = receta.pasos && receta.pasos.length > 0;
 
   return (

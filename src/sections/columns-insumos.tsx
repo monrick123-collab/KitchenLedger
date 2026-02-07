@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Edit2, Trash2 } from "lucide-react"
 
 export const columns = (
-    onEdit: (id: string, datos: Partial<Ingrediente>) => void,
+    _onEdit: (id: string, datos: Partial<Ingrediente>) => void,
     onDelete: (id: string) => void,
     onEditFull: (ingrediente: Ingrediente) => void
 ): ColumnDef<Ingrediente>[] => [
