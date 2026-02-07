@@ -389,12 +389,12 @@ export function useDatabase() {
   // FASE 4: PRODUCCIÓN Y REPORTES
   // ============================================
 
-  async function registrarProduccion(produccion: {
+  const registrarProduccion = async (produccion: {
     recetaId: string;
     cantidad: number;
     costoUnitarioSnapshot: number;
     costoTotal: number;
-  }) {
+  }) => {
     try {
       const { data, error } = await supabase
         .from('historial_produccion')
@@ -414,9 +414,9 @@ export function useDatabase() {
       console.error("Error registrando producción:", e);
       throw e;
     }
-  }
+  };
 
-  async function registrarMovimiento(movimiento: {
+  const registrarMovimiento = async (movimiento: {
     tipo: 'COMPRA' | 'MERMA' | 'AJUSTE';
     ingredienteId: string;
     cantidad: number;
@@ -424,7 +424,7 @@ export function useDatabase() {
     costoUnitario: number;
     costoTotal: number;
     motivo?: string;
-  }) {
+  }) => {
     try {
       const { data, error } = await supabase
         .from('movimientos_inventario')
@@ -447,9 +447,9 @@ export function useDatabase() {
       console.error("Error registrando movimiento:", e);
       throw e;
     }
-  }
+  };
 
-  async function fetchHistorialProduccion() {
+  const fetchHistorialProduccion = async () => {
     try {
       const { data, error } = await supabase
         .from('historial_produccion')
@@ -475,7 +475,7 @@ export function useDatabase() {
       console.error("Error fetching historial:", e);
       return [];
     }
-  }
+  };
 
   return {
     ingredientes,
