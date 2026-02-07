@@ -184,8 +184,8 @@ export function useDatabase() {
 
   const agregarIngrediente = async (ingrediente: Omit<Ingrediente, 'id' | 'fechaActualizacion'>) => {
     try {
-      const { data, error } = await supabase
-        .from('insumos')
+      const { data, error } = await (supabase
+        .from('insumos') as any)
         .insert({
           nombre: ingrediente.nombre,
           categoria: ingrediente.categoria,
@@ -215,7 +215,7 @@ export function useDatabase() {
       if (datos.proveedor) updates.proveedor = datos.proveedor;
       if (datos.densidad) updates.densidad = datos.densidad;
 
-      const { error } = await supabase.from('insumos').update(updates).eq('id', id);
+      const { error } = await (supabase.from('insumos') as any).update(updates).eq('id', id);
       if (error) throw error;
       await cargarDatos();
     } catch (e) {
@@ -225,7 +225,7 @@ export function useDatabase() {
 
   const eliminarIngrediente = async (id: string) => {
     try {
-      const { error } = await supabase.from('insumos').delete().eq('id', id);
+      const { error } = await (supabase.from('insumos') as any).delete().eq('id', id);
       if (error) { alert("Error al eliminar: " + error.message); throw error; }
       await cargarDatos();
     } catch (e) {
@@ -235,8 +235,8 @@ export function useDatabase() {
 
   const agregarReceta = async (receta: Omit<Receta, 'id' | 'fechaCreacion' | 'fechaActualizacion' | 'costoTotal' | 'margenGanancia'>) => {
     try {
-      const { data: recetaData, error: recetaError } = await supabase
-        .from('recetas')
+      const { data: recetaData, error: recetaError } = await (supabase
+        .from('recetas') as any)
         .insert({
           nombre: receta.nombre,
           descripcion: receta.descripcion,
@@ -263,7 +263,7 @@ export function useDatabase() {
       })) as any;
 
       if (ingredientesInsert.length > 0) {
-        const { error: ingError } = await supabase.from('receta_ingredientes').insert(ingredientesInsert);
+        const { error: ingError } = await (supabase.from('receta_ingredientes') as any).insert(ingredientesInsert);
         if (ingError) throw ingError;
       }
 
@@ -287,11 +287,11 @@ export function useDatabase() {
       if (datos.imagen !== undefined) updates.imagen = datos.imagen;
       if (datos.pasos !== undefined) updates.pasos = datos.pasos;
 
-      const { error } = await supabase.from('recetas').update(updates).eq('id', id);
+      const { error } = await (supabase.from('recetas') as any).update(updates).eq('id', id);
       if (error) throw error;
 
       if (datos.ingredientes) {
-        await supabase.from('receta_ingredientes').delete().eq('receta_id', id);
+        await (supabase.from('receta_ingredientes') as any).delete().eq('receta_id', id);
         const nuevosIngs = datos.ingredientes.map(ing => ({
           receta_id: id,
           ingrediente_id: ing.ingredienteId || null,
@@ -301,7 +301,7 @@ export function useDatabase() {
           costo_calculado: ing.costoCalculado
         }));
         if (nuevosIngs.length > 0) {
-          await supabase.from('receta_ingredientes').insert(nuevosIngs);
+          await (supabase.from('receta_ingredientes') as any).insert(nuevosIngs);
         }
       }
       await cargarDatos();
