@@ -302,7 +302,6 @@ interface DetalleRecetaProps {
 }
 
 function DetalleReceta({ receta, ingredientes, onCerrar, onEditar, onIniciarCocina }: DetalleRecetaProps) {
-  const costoPorPorcion = receta.costoTotal / receta.porciones;
   const tienePasos = receta.pasos && receta.pasos.length > 0;
 
   return (

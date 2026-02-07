@@ -260,7 +260,7 @@ export function useDatabase() {
         cantidad: ing.cantidad,
         unidad_uso: ing.unidadUso,
         costo_calculado: ing.costoCalculado
-      }));
+      })) as any;
 
       if (ingredientesInsert.length > 0) {
         const { error: ingError } = await supabase.from('receta_ingredientes').insert(ingredientesInsert);
@@ -396,8 +396,8 @@ export function useDatabase() {
     costoTotal: number;
   }) => {
     try {
-      const { data, error } = await supabase
-        .from('historial_produccion')
+      const { data, error } = await (supabase
+        .from('historial_produccion') as any)
         .insert({
           receta_id: produccion.recetaId,
           cantidad_producida: produccion.cantidad,
@@ -426,8 +426,8 @@ export function useDatabase() {
     motivo?: string;
   }) => {
     try {
-      const { data, error } = await supabase
-        .from('movimientos_inventario')
+      const { data, error } = await (supabase
+        .from('movimientos_inventario') as any)
         .insert({
           tipo: movimiento.tipo,
           ingrediente_id: movimiento.ingredienteId,
@@ -451,8 +451,8 @@ export function useDatabase() {
 
   const fetchHistorialProduccion = async () => {
     try {
-      const { data, error } = await supabase
-        .from('historial_produccion')
+      const { data, error } = await (supabase
+        .from('historial_produccion') as any)
         .select(`
           *,
           recetas (nombre)
