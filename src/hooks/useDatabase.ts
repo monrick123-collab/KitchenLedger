@@ -76,7 +76,7 @@ export function useDatabase() {
 
       if (errorInsumos) throw errorInsumos;
 
-      const ingredientesMapeados: Ingrediente[] = (dataInsumos as any[] || []).map(i => ({
+      const ingredientesMapeados: Ingrediente[] = (dataInsumos as any[] || []).map((i: any) => ({
         id: i.id,
         nombre: i.nombre,
         unidadCompra: i.unidad_compra as any,
@@ -108,10 +108,10 @@ export function useDatabase() {
 
       if (errorRecetas) throw errorRecetas;
 
-      const recetasMapeadasPromises = (dataRecetas as any[] || []).map(async (r) => {
+      const recetasMapeadasPromises = (dataRecetas as any[] || []).map(async (r: any) => {
         const ingredientesReceta: IngredienteReceta[] = [];
 
-        for (const ri of (r.receta_ingredientes || [])) {
+        for (const ri of (r.receta_ingredientes as any[] || [])) {
           let costo = Number(ri.costo_calculado);
           let nombre = "Desconocido";
 
