@@ -69,14 +69,14 @@ export function useDatabase() {
     setIsLoading(true);
     try {
       // 1. Cargar Insumos
-      const { data: dataInsumos, error: errorInsumos } = await supabase
-        .from('insumos')
+      const { data: dataInsumos, error: errorInsumos } = await (supabase
+        .from('insumos') as any)
         .select('*')
         .order('nombre');
 
       if (errorInsumos) throw errorInsumos;
 
-      const ingredientesMapeados: Ingrediente[] = (dataInsumos || []).map(i => ({
+      const ingredientesMapeados: Ingrediente[] = (dataInsumos as any[] || []).map(i => ({
         id: i.id,
         nombre: i.nombre,
         unidadCompra: i.unidad_compra as any,
@@ -91,8 +91,8 @@ export function useDatabase() {
       setIngredientes(ingredientesMapeados);
 
       // 2. Cargar Recetas y sus Ingredientes
-      const { data: dataRecetas, error: errorRecetas } = await supabase
-        .from('recetas')
+      const { data: dataRecetas, error: errorRecetas } = await (supabase
+        .from('recetas') as any)
         .select(`
             *,
             receta_ingredientes!receta_ingredientes_receta_id_fkey (
@@ -108,7 +108,7 @@ export function useDatabase() {
 
       if (errorRecetas) throw errorRecetas;
 
-      const recetasMapeadasPromises = (dataRecetas || []).map(async (r) => {
+      const recetasMapeadasPromises = (dataRecetas as any[] || []).map(async (r) => {
         const ingredientesReceta: IngredienteReceta[] = [];
 
         for (const ri of (r.receta_ingredientes || [])) {
@@ -119,15 +119,8 @@ export function useDatabase() {
             const ingBase = ingredientesMapeados.find(i => i.id === ri.ingrediente_id);
             nombre = ingBase?.nombre || "Ingrediente Eliminado";
           } else if (ri.sub_receta_id) {
-            // Si es sub-receta, por ahora usamos el nombre de la receta base si ya está cargada
-            // De lo contrario, hacemos un fetch rápido o usamos un placeholder si hay recursión circular
-            // OPCIÓN SIMPLE: Buscar en dataRecetas local (si ya cargó) o hacer fetch individual
-            // Para evitar N+1 queries complex, asumiremos que dataRecetas trae todo, 
-            // pero 'map' es síncrono. Mejor buscar en dataRecetas raw.
-            const sub = (dataRecetas || []).find((s: any) => s.id === ri.sub_receta_id);
+            const sub = (dataRecetas as any[] || []).find((s: any) => s.id === ri.sub_receta_id);
             nombre = sub ? `(Sub) ${sub.nombre}` : "(Sub) Desconocida";
-            // El costo ya viene calculado y guardado en costo_calculado al crear, 
-            // así que no necesitamos recalcular recursivamente AQUI en lectura para display rápido.
           }
 
           ingredientesReceta.push({
