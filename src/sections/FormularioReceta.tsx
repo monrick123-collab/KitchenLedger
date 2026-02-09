@@ -48,6 +48,7 @@ import {
   calcularCostoProporcional,
   generateId
 } from '@/types';
+import { Copy } from 'lucide-react';
 
 // ============================================
 // COMPONENTE: SELECTOR DE INGREDIENTE (CON SUB-RECETAS)
@@ -412,6 +413,7 @@ interface FormularioRecetaProps {
 
 export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onCancelar }: FormularioRecetaProps) {
   const [nombre, setNombre] = useState(receta?.nombre || '');
+  const [tipo, setTipo] = useState<'PLATO' | 'PREPARACION'>(receta?.tipo || 'PLATO'); // [NEW] V6
   const [descripcion, setDescripcion] = useState(receta?.descripcion || '');
   const [categoria, setCategoria] = useState(receta?.categoria || CATEGORIAS_RECETAS[0]);
   const [porciones, setPorciones] = useState(receta?.porciones || 1);
@@ -424,6 +426,7 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
   const [dialogoIngrediente, setDialogoIngrediente] = useState(false);
   const [ingredienteEditando, setIngredienteEditando] = useState<IngredienteReceta | null>(null);
   const [dialogoCalculadora, setDialogoCalculadora] = useState(false);
+  const [dialogoImportarPasos, setDialogoImportarPasos] = useState(false); // [NEW]
 
   // Calcular costo total
   const costoTotal = ingredientesReceta.reduce((sum, ing) => sum + ing.costoCalculado, 0);
@@ -471,6 +474,7 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
     e.preventDefault();
     onGuardar({
       nombre,
+      tipo, // [NEW] V6
       descripcion,
       categoria,
       porciones,
@@ -487,6 +491,20 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
     setPorciones(nuevasPorciones);
     setPrecioVenta(nuevoPrecio);
     setDialogoCalculadora(false);
+  };
+
+  const handleImportarPasos = (subRecetaId: string) => {
+    const sub = recetas.find(r => r.id === subRecetaId);
+    if (!sub || !sub.pasos) return;
+
+    const nuevosPasos = sub.pasos.map(p => ({
+      ...p,
+      titulo: `[${sub.nombre}] ${p.titulo}`
+    }));
+
+    setPasos(prev => [...prev, ...nuevosPasos]);
+    setDialogoImportarPasos(false);
+    // Toast success opcional
   };
 
   const indicador = getIndicadorRentabilidad(costoTotal, precioVenta);
@@ -528,6 +546,36 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
               <CardTitle className="text-lg">Información Básica</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Selector de Tipo */}
+              <div className="flex gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="tipo-plato"
+                    name="tipoReceta"
+                    className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
+                    checked={tipo === 'PLATO'}
+                    onChange={() => setTipo('PLATO')}
+                  />
+                  <Label htmlFor="tipo-plato" className="font-medium cursor-pointer">
+                    Plato Fuerte / Venta
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="tipo-prep"
+                    name="tipoReceta"
+                    className="w-4 h-4 text-amber-600 focus:ring-amber-500"
+                    checked={tipo === 'PREPARACION'}
+                    onChange={() => setTipo('PREPARACION')}
+                  />
+                  <Label htmlFor="tipo-prep" className="font-medium cursor-pointer">
+                    Sub-receta / Preparación Base
+                  </Label>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>Nombre de la Receta *</Label>
                 <Input
@@ -577,8 +625,17 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
 
           {/* PASOS DE PREPARACIÓN */}
           <Card className="border-gray-200">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Pasos de Preparación</CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogoImportarPasos(true)}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Importar de Sub-receta
+              </Button>
             </CardHeader>
             <CardContent>
               <EditorPasos pasos={pasos} onChange={setPasos} />
@@ -842,6 +899,37 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
             precioVentaActual={precioVenta}
             onAplicar={handleAplicarCalculadora}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogo de importar pasos */}
+      <Dialog open={dialogoImportarPasos} onOpenChange={setDialogoImportarPasos}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Importar Pasos de Sub-receta</DialogTitle>
+            <DialogDescription>
+              Selecciona una sub-receta usada para copiar sus pasos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-4">
+            {ingredientesReceta.filter(i => i.subRecetaId).length === 0 ? (
+              <p className="text-center text-gray-500 text-sm">No hay sub-recetas agregadas en la lista de ingredientes.</p>
+            ) : (
+              ingredientesReceta.filter(i => i.subRecetaId).map(ing => (
+                <Button
+                  key={ing.subRecetaId}
+                  variant="outline"
+                  className="w-full justify-start h-auto py-3 px-4"
+                  onClick={() => handleImportarPasos(ing.subRecetaId!)}
+                >
+                  <div className="flex flex-col items-start text-left">
+                    <span className="font-medium text-gray-900">{ing.nombreIngrediente}</span>
+                    <span className="text-xs text-gray-500">Clic para importar</span>
+                  </div>
+                </Button>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </form>

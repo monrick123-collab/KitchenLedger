@@ -70,6 +70,7 @@ export interface Receta {
   categoria: string;
   ingredientes: IngredienteReceta[];
   pasos?: PasoReceta[]; // [NEW] Fase 2
+  tipo?: 'PLATO' | 'PREPARACION'; // [NEW] V6
   costoTotal: number;
   precioVenta: number;
   margenGanancia: number;

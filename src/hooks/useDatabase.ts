@@ -143,6 +143,7 @@ export function useDatabase() {
           nombre: r.nombre,
           descripcion: r.descripcion || '',
           categoria: r.categoria,
+          tipo: r.tipo || 'PLATO', // [NEW] V6
           porciones: Number(r.porciones),
           tiempoPreparacion: r.tiempo_preparacion,
           precioVenta: Number(r.precio_venta),
@@ -222,6 +223,7 @@ export function useDatabase() {
         nombre: r.nombre,
         descripcion: r.descripcion || '',
         categoria: r.categoria,
+        tipo: r.tipo || 'PLATO', // [NEW] V6
         porciones: Number(r.porciones),
         tiempoPreparacion: r.tiempo_preparacion,
         precioVenta: Number(r.precio_venta),
@@ -319,6 +321,7 @@ export function useDatabase() {
           nombre: receta.nombre,
           descripcion: receta.descripcion,
           categoria: receta.categoria,
+          tipo: receta.tipo || 'PLATO', // [NEW] V6
           tiempo_preparacion: receta.tiempoPreparacion || 0,
           porciones: receta.porciones,
           precio_venta: receta.precioVenta,
@@ -360,6 +363,7 @@ export function useDatabase() {
       if (datos.nombre) updates.nombre = datos.nombre;
       if (datos.descripcion !== undefined) updates.descripcion = datos.descripcion;
       if (datos.categoria) updates.categoria = datos.categoria;
+      if (datos.tipo) updates.tipo = datos.tipo; // [NEW] V6
       if (datos.porciones) updates.porciones = datos.porciones;
       if (datos.tiempoPreparacion) updates.tiempo_preparacion = datos.tiempoPreparacion;
       if (datos.precioVenta) updates.precio_venta = datos.precioVenta;

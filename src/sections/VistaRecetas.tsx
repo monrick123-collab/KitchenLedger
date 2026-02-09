@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // [NEW]
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -486,6 +487,7 @@ export function VistaRecetas({
 }: VistaRecetasProps) {
   const [busqueda, setBusqueda] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'PLATO' | 'PREPARACION'>('TODOS'); // [NEW]
   const [recetaSeleccionada, setRecetaSeleccionada] = useState<Receta | null>(null);
   const [dialogoEliminar, setDialogoEliminar] = useState<string | null>(null);
   const [modoCocinaActivo, setModoCocinaActivo] = useState(false); // [NEW] Estado para el wizard
@@ -495,9 +497,10 @@ export function VistaRecetas({
       const matchBusqueda = receta.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
         receta.descripcion?.toLowerCase().includes(busqueda.toLowerCase());
       const matchCategoria = !categoriaFiltro || categoriaFiltro === "TODAS" || receta.categoria === categoriaFiltro;
-      return matchBusqueda && matchCategoria;
+      const matchTipo = filtroTipo === 'TODOS' || (receta.tipo || 'PLATO') === filtroTipo; // [NEW]
+      return matchBusqueda && matchCategoria && matchTipo;
     });
-  }, [recetas, busqueda, categoriaFiltro]);
+  }, [recetas, busqueda, categoriaFiltro, filtroTipo]);
 
   // Agrupar por categoría
   const recetasPorCategoria = useMemo(() => {
@@ -551,6 +554,15 @@ export function VistaRecetas({
           Nueva Receta
         </Button>
       </div>
+
+      {/* Tabs Tipo Receta */}
+      <Tabs defaultValue="TODOS" className="w-full" onValueChange={(v) => setFiltroTipo(v as any)}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="TODOS">Todas</TabsTrigger>
+          <TabsTrigger value="PLATO">Platos / Menú</TabsTrigger>
+          <TabsTrigger value="PREPARACION">Sub-recetas / Bases</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Filtros */}
       <Card className="border-gray-200">
