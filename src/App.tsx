@@ -4,6 +4,8 @@ import { Dashboard } from '@/sections/Dashboard';
 import { VistaInsumos } from '@/sections/VistaInsumos';
 import { VistaRecetas } from '@/sections/VistaRecetas';
 import { VistaProduccion } from '@/sections/VistaProduccion';
+import { VistaMermas } from '@/sections/VistaMermas';
+import { VistaVentas } from '@/sections/VistaVentas';
 import { FormularioReceta } from '@/sections/FormularioReceta';
 import { useDatabase } from '@/hooks/useDatabase';
 import type { Vista, Receta, RolUsuario } from '@/types';
@@ -142,6 +144,12 @@ function App() {
 
       case 'produccion':
         return <VistaProduccion />;
+
+      case 'mermas':
+        return <VistaMermas />;
+
+      case 'ventas':
+        return <VistaVentas />;
 
       case 'nueva-receta':
       case 'editar-receta':

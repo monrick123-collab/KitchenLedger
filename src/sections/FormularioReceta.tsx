@@ -371,7 +371,7 @@ function CalculadoraPorciones({
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Margen resultante:</span>
           <span className={`font-semibold ${margenCalculado >= 65 ? 'text-emerald-600' :
-              margenCalculado >= 50 ? 'text-amber-600' : 'text-red-600'
+            margenCalculado >= 50 ? 'text-amber-600' : 'text-red-600'
             }`}>
             {formatPercent(margenCalculado)}
           </span>
@@ -380,7 +380,7 @@ function CalculadoraPorciones({
           <span className="text-sm text-gray-600">Rentabilidad:</span>
           <div className="flex items-center gap-2">
             <div className={`w-3 h-3 rounded-full ${indicador === 'verde' ? 'bg-emerald-500' :
-                indicador === 'amarillo' ? 'bg-amber-400' : 'bg-red-500'
+              indicador === 'amarillo' ? 'bg-amber-400' : 'bg-red-500'
               }`} />
             <span className="text-sm capitalize">{indicador}</span>
           </div>
@@ -639,7 +639,7 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Agregar
+                Agregar Insumo / Sub-receta
               </Button>
             </CardHeader>
             <CardContent>
@@ -756,7 +756,7 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-500">Margen</span>
                   <span className={`font-bold ${margenGanancia >= 65 ? 'text-emerald-600' :
-                      margenGanancia >= 50 ? 'text-amber-600' : 'text-red-600'
+                    margenGanancia >= 50 ? 'text-amber-600' : 'text-red-600'
                     }`}>
                     {formatPercent(margenGanancia)}
                   </span>
@@ -772,7 +772,7 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
                 <span className="text-sm text-gray-500">Rentabilidad</span>
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${indicador === 'verde' ? 'bg-emerald-500' :
-                      indicador === 'amarillo' ? 'bg-amber-400' : 'bg-red-500'
+                    indicador === 'amarillo' ? 'bg-amber-400' : 'bg-red-500'
                     }`} />
                   <span className="text-sm capitalize">{indicador}</span>
                 </div>
@@ -816,7 +816,7 @@ export function FormularioReceta({ receta, ingredientes, recetas, onGuardar, onC
           </DialogHeader>
           <SelectorIngrediente
             ingredientes={ingredientes}
-            recetas={recetas} // [NEW]
+            recetas={recetas.filter(r => r.id !== (receta?.id || 'new'))} // [FIX] Evitar recursión
             seleccionado={ingredienteEditando}
             onSeleccionar={handleAgregarIngrediente}
             onCancelar={() => {

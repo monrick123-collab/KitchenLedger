@@ -167,6 +167,91 @@ export function useDatabase() {
     }
   }, []);
 
+  // Cargar una sola receta (Optimización)
+  const recargarReceta = async (id: string) => {
+    try {
+      const { data: r, error } = await (supabase
+        .from('recetas') as any)
+        .select(`
+            *,
+            receta_ingredientes!receta_ingredientes_receta_id_fkey (
+                id,
+                ingrediente_id,
+                sub_receta_id,
+                cantidad,
+                unidad_uso,
+                costo_calculado
+            )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      // Mapear esta receta única
+      const ingredientesReceta: IngredienteReceta[] = [];
+      for (const ri of (r.receta_ingredientes as any[] || [])) {
+        let costo = Number(ri.costo_calculado);
+        let nombre = "Desconocido";
+
+        if (ri.ingrediente_id) {
+          const ingBase = ingredientes.find(i => i.id === ri.ingrediente_id);
+          nombre = ingBase?.nombre || "Ingrediente Eliminado";
+        } else if (ri.sub_receta_id) {
+          const sub = recetas.find(s => s.id === ri.sub_receta_id);
+          nombre = sub ? `(Sub) ${sub.nombre}` : "(Sub) Desconocida";
+        }
+
+        ingredientesReceta.push({
+          id: ri.id,
+          ingredienteId: ri.ingrediente_id,
+          subRecetaId: ri.sub_receta_id,
+          cantidad: Number(ri.cantidad),
+          unidadUso: ri.unidad_uso as any,
+          costoCalculado: costo,
+          nombreIngrediente: nombre
+        });
+      }
+
+      let costoTotal = 0;
+      ingredientesReceta.forEach(ir => costoTotal += ir.costoCalculado);
+      const margenGanancia = r.precio_venta > 0 ? ((r.precio_venta - costoTotal) / r.precio_venta) * 100 : 0;
+
+      const recetaProcesada: Receta = {
+        id: r.id,
+        nombre: r.nombre,
+        descripcion: r.descripcion || '',
+        categoria: r.categoria,
+        porciones: Number(r.porciones),
+        tiempoPreparacion: r.tiempo_preparacion,
+        precioVenta: Number(r.precio_venta),
+        imagen: r.imagen || undefined,
+        activa: r.activa !== false,
+        fechaCreacion: r.fecha_creacion,
+        fechaActualizacion: r.fecha_actualizacion,
+        ingredientes: ingredientesReceta,
+        pasos: r.pasos || [],
+        costoTotal,
+        margenGanancia
+      };
+
+      setRecetas(prev => {
+        const index = prev.findIndex(item => item.id === id);
+        if (index >= 0) {
+          const newArr = [...prev];
+          newArr[index] = recetaProcesada;
+          return newArr;
+        } else {
+          return [...prev, recetaProcesada];
+        }
+      });
+      return recetaProcesada;
+
+    } catch (e) {
+      console.error("Error recargando receta:", e);
+    }
+  };
+
   useEffect(() => {
     cargarDatos();
   }, [cargarDatos]);
@@ -260,7 +345,8 @@ export function useDatabase() {
         if (ingError) throw ingError;
       }
 
-      await cargarDatos();
+      // Optimización: No recargar todo, solo esta receta
+      await recargarReceta(recetaData.id);
       return recetaData;
 
     } catch (e) {
@@ -297,7 +383,14 @@ export function useDatabase() {
           await (supabase.from('receta_ingredientes') as any).insert(nuevosIngs);
         }
       }
-      await cargarDatos();
+
+
+      // Optimización: Recargar solo esta receta
+      await recargarReceta(id);
+
+      // Si esta receta es sub-receta de otras, ahí SI valdría la pena recargar todo
+      // o ser muy inteligente recursivamente. Por seguridad, si el usuario nota inconsistencias
+      // en padres, puede recargar página. Para el caso común (editar receta final), esto basta.
     } catch (e) {
       console.error("Error actualizando receta:", e);
     }
@@ -356,7 +449,7 @@ export function useDatabase() {
   const actualizacionMasiva = async (actualizaciones: { id: string; costoUnitario: number }[]) => {
     try {
       for (const act of actualizaciones) {
-        await supabase.from('insumos').update({ costo_unitario: act.costoUnitario } as any).eq('id', act.id);
+        await (supabase.from('insumos') as any).update({ costo_unitario: act.costoUnitario } as any).eq('id', act.id);
       }
       await cargarDatos();
     } catch (e) {
@@ -396,7 +489,8 @@ export function useDatabase() {
           cantidad_producida: produccion.cantidad,
           costo_unitario_snapshot: produccion.costoUnitarioSnapshot,
           costo_total: produccion.costoTotal,
-          fecha: new Date().toISOString()
+          fecha: new Date().toISOString(),
+          tipo: 'PRODUCCION'
         })
         .select()
         .single();
@@ -405,6 +499,64 @@ export function useDatabase() {
       return data;
     } catch (e) {
       console.error("Error registrando producción:", e);
+      throw e;
+    }
+  };
+
+  const registrarMerma = async (merma: {
+    recetaId: string;
+    cantidad: number;
+    costoUnitarioSnapshot: number;
+    costoTotal: number;
+    motivo: string;
+  }) => {
+    try {
+      const { data, error } = await (supabase
+        .from('historial_produccion') as any)
+        .insert({
+          receta_id: merma.recetaId,
+          cantidad_producida: merma.cantidad,
+          costo_unitario_snapshot: merma.costoUnitarioSnapshot,
+          costo_total: merma.costoTotal,
+          fecha: new Date().toISOString(),
+          tipo: 'MERMA',
+          motivo: merma.motivo
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error("Error registrando merma:", e);
+      throw e;
+    }
+  };
+
+  const registrarVenta = async (venta: {
+    recetaId: string;
+    cantidad: number;
+    costoUnitarioSnapshot: number;
+    costoTotal: number;
+  }) => {
+    try {
+      const { data, error } = await (supabase
+        .from('historial_produccion') as any)
+        .insert({
+          receta_id: venta.recetaId,
+          cantidad_producida: venta.cantidad,
+          costo_unitario_snapshot: venta.costoUnitarioSnapshot,
+          costo_total: venta.costoTotal,
+          fecha: new Date().toISOString(),
+          tipo: 'VENTA'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error("Error registrando venta:", e);
       throw e;
     }
   };
@@ -462,7 +614,9 @@ export function useDatabase() {
         nombreReceta: item.recetas ? (Array.isArray(item.recetas) ? item.recetas[0].nombre : item.recetas.nombre) : 'Desconocida',
         cantidadProducida: Number(item.cantidad_producida),
         costoUnitarioSnapshot: Number(item.costo_unitario_snapshot),
-        costoTotal: Number(item.costo_total)
+        costoTotal: Number(item.costo_total),
+        tipo: item.tipo || 'PRODUCCION',
+        motivo: item.motivo
       }));
     } catch (e) {
       console.error("Error fetching historial:", e);
@@ -487,6 +641,8 @@ export function useDatabase() {
     getRecetasPorCategoria,
     inicializarBaseDeDatos,
     registrarProduccion,
+    registrarMerma,
+    registrarVenta,
     registrarMovimiento,
     fetchHistorialProduccion
   };

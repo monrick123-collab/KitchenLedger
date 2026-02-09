@@ -79,16 +79,33 @@ export interface Receta {
 }
 
 // Indicador de rentabilidad (semáforo)
+// V2: Ajuste de márgenes solicitado por cliente
+// Verde: >= 50%
+// Amarillo: 30% - 49%
+// Rojo: < 30%
+export function getIndicadorRentabilidad(
+  costo: number,
+  precioVenta: number
+): IndicadorRentabilidad {
+  if (precioVenta === 0) return 'rojo';
+  const porcentajeCosto = (costo / precioVenta) * 100; // Ej: 35% costo = 65% margen
+
+  if (porcentajeCosto <= 50) return 'verde';   // Margen >= 50%
+  if (porcentajeCosto <= 70) return 'amarillo'; // Margen >= 30%
+  return 'rojo';                                // Margen < 30%
+}
+
 export type IndicadorRentabilidad = 'verde' | 'amarillo' | 'rojo';
 
 // Vista actual de la aplicación
-export type Vista = 'dashboard' | 'insumos' | 'recetas' | 'nueva-receta' | 'editar-receta' | 'produccion';
+export type Vista = 'dashboard' | 'insumos' | 'recetas' | 'nueva-receta' | 'editar-receta' | 'produccion' | 'mermas' | 'ventas';
 
 // Rol del usuario
 export type RolUsuario = 'contador' | 'chef' | 'admin';
 
-// Fase 4: Producción y Reportes
+// Fase 4 & 5: Producción, Mermas y Ventas
 export type TipoMovimiento = 'COMPRA' | 'MERMA' | 'AJUSTE';
+export type TipoRegistro = 'PRODUCCION' | 'MERMA' | 'VENTA'; // [NEW] V5
 
 export interface MovimientoInventario {
   id: string;
@@ -106,6 +123,8 @@ export interface MovimientoInventario {
 export interface RegistroProduccion {
   id: string;
   fecha: string;
+  tipo: TipoRegistro; // [NEW] V5
+  motivo?: string;    // [NEW] V5 (para mermas)
   recetaId: string;
   nombreReceta?: string; // Join
   cantidadProducida: number;
@@ -293,18 +312,14 @@ export function calcularCostoProporcional(
   return cantidadEnUnidadCompra * costoUnitario;
 }
 
-// Determinar indicador de rentabilidad
-export function getIndicadorRentabilidad(
-  costo: number,
-  precioVenta: number
-): IndicadorRentabilidad {
-  if (precioVenta === 0) return 'rojo';
-  const porcentajeCosto = (costo / precioVenta) * 100;
-
-  if (porcentajeCosto < 30) return 'verde';
-  if (porcentajeCosto <= 35) return 'amarillo';
-  return 'rojo';
-}
+// Determinar indicador de rentabilidad (Mover a definición superior si es necesario, o mantener aquí)
+// En V5 lo hemos movido arriba para tener tipo y función juntos, o podemos dejarlo aquí.
+// Para evitar duplicados, borraré esta implementación antigua si ya pegué la nueva arriba.
+// PERO, mejor: Mantener la implementación AQUI y solo actualizar la lógica.
+// Y en el paso anterior NO haber pegado la función.
+// Too late to change the previous tool call in thought.
+// I will Correct: The previous tool call inserted the function at line 81.
+// So I MUST remove it from here.
 
 // Formatear moneda
 export function formatCurrency(amount: number): string {
@@ -318,6 +333,15 @@ export function formatCurrency(amount: number): string {
 // Formatear porcentaje
 export function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;
+}
+
+export function formatFecha(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
 // Generar ID único

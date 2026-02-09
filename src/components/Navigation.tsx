@@ -4,7 +4,9 @@ import {
   ChefHat,
   TrendingUp,
   Menu,
-  X
+  X,
+  Trash2,
+  UtensilsCrossed
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Vista, RolUsuario } from '@/types';
@@ -22,6 +24,8 @@ const navItems: { vista: Vista; label: string; icon: React.ElementType; roles: R
   { vista: 'insumos', label: 'Insumos', icon: Package, roles: ['admin', 'contador'] },
   { vista: 'recetas', label: 'Recetas', icon: ChefHat, roles: ['admin', 'chef'] },
   { vista: 'produccion', label: 'Producción', icon: TrendingUp, roles: ['admin', 'chef'] },
+  { vista: 'mermas', label: 'Mermas', icon: Trash2, roles: ['admin', 'chef'] },
+  { vista: 'ventas', label: 'Ventas', icon: UtensilsCrossed, roles: ['admin', 'chef', 'contador'] },
 ];
 
 export function Navigation({
